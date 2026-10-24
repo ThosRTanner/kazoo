@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import unittest
 
-from typing import Generator, Literal, TYPE_CHECKING
+from typing import Any, Generator, Literal, TYPE_CHECKING
 
 import pytest
 
@@ -11,20 +12,34 @@ from kazoo.handlers.utils import create_tcp_socket
 from kazoo.handlers import utils
 from kazoo.interfaces import IAsyncResult
 from kazoo.protocol import states as kazoo_states
+from kazoo.testing.async_result_common import (
+    AsyncResultCommon,
+    ThreadlikeContext,
+)
 
 if TYPE_CHECKING:
     from kazoo.handlers.eventlet import SequentialEventletHandler
 
-try:
+if importlib.util.find_spec("eventlet") is None:
+    # The double test here stops complaints about imports not being at the top
+    # of the file.
+    pytest.importorskip("eventlet", reason="eventlet not available")
+else:
     from eventlet.green import socket
+    import eventlet
     from kazoo.handlers import eventlet as eventlet_handler
-except ImportError:
-    pytestmark = pytest.mark.skip(reason="eventlet not available")
+
+
+class EventletContext(ThreadlikeContext):
+    def __enter__(self) -> None:
+        # Spawn the eventlet and then immediately sleep to hand over control
+        eventlet.spawn(self._target)  # type:ignore[no-untyped-call]
+        eventlet.sleep(0)  # type:ignore[no-untyped-call]
 
 
 @contextlib.contextmanager
 def start_stop_one(
-    handler: SequentialEventletHandler = None,  # type: ignore[assignment]
+    handler: SequentialEventletHandler | None = None,
 ) -> Generator[SequentialEventletHandler]:
     if not handler:
         handler = eventlet_handler.SequentialEventletHandler()
@@ -33,6 +48,18 @@ def start_stop_one(
         yield handler
     finally:
         handler.stop()
+
+
+# Doesn't work with eventlet, so commented out for now.
+class TestEventletAsyncResult(AsyncResultCommon, unittest.TestCase):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(
+            eventlet_handler.SequentialEventletHandler,
+            lambda handler: eventlet_handler.AsyncResult(handler),
+            thread_context_factory=EventletContext,
+            *args,
+            **kwargs,
+        )
 
 
 class TestEventletHandler(unittest.TestCase):
