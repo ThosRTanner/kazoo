@@ -5,7 +5,7 @@ import importlib
 import sys
 import uuid
 from contextlib import contextmanager
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import Any, Iterator, TYPE_CHECKING, cast
 
 from unittest.mock import patch, call, Mock
 import pytest
@@ -64,7 +64,7 @@ class KazooAdaptiveHandlerTestCase(KazooTestHarness):
 class KazooTreeCacheTests(KazooAdaptiveHandlerTestCase):
     def setUp(self) -> None:
         super().setUp()
-        self._event_queue: Queue[TreeEvent] = self.client.handler.queue_impl()
+        self._event_queue = self.client.handler.queue_impl()
         self._error_queue = self.client.handler.queue_impl()
         self._path: str | None = None
 
@@ -108,7 +108,7 @@ class KazooTreeCacheTests(KazooAdaptiveHandlerTestCase):
             if started:
                 if expect is not None:
                     assert event.event_type == expect
-                return event
+                return event if event is None else cast("TreeEvent", event)
             if event.event_type == since:
                 started = True
                 if expect is None:

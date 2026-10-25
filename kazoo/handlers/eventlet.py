@@ -9,8 +9,8 @@ import logging
 from typing import cast, Any, Generator, TYPE_CHECKING
 
 import eventlet
+from eventlet import greenthread
 from eventlet.green import socket as green_socket
-from eventlet.green import time as green_time
 from eventlet.green import threading as green_threading
 from eventlet.green import selectors as green_selectors
 from eventlet import queue as green_queue
@@ -89,9 +89,10 @@ class SequentialEventletHandler(IHandler):
     """
 
     name = "sequential_eventlet_handler"
-    queue_impl = green_queue.LightQueue  # type: ignore[assignment]
+    timeout_exception = TimeoutError
+    queue_impl = green_queue.LightQueue
     queue_empty = green_queue.Empty
-    sleep_func = staticmethod(green_time.sleep)  # type: ignore[assignment, attr-defined]
+    sleep_func = staticmethod(greenthread.sleep)
 
     def __init__(self) -> None:
         """Create a :class:`SequentialEventletHandler` instance"""
@@ -101,16 +102,14 @@ class SequentialEventletHandler(IHandler):
         self._completion_queue = (
             self.queue_impl()  # type: ignore[no-untyped-call]
         )
-        self._workers: list[  # type: ignore[name-defined]
-            tuple[eventlet.GreenThread, green_queue.LightQueue]
+        self._workers: list[
+            tuple[greenthread.GreenThread, green_queue.LightQueue]
         ] = []
         self._started = False
 
     @property
     def running(self) -> bool:
         return self._started
-
-    timeout_exception = TimeoutError
 
     def _process_completion_queue(self) -> None:
         while True:
@@ -164,7 +163,7 @@ class SequentialEventletHandler(IHandler):
         while self._workers:
             w, q = self._workers.pop()
             q.put(_STOP)  # type: ignore[no-untyped-call]
-            w.wait()
+            w.wait()  # type:ignore[no-untyped-call]
         self._started = False
         atexit.unregister(self.stop)
 
