@@ -289,7 +289,7 @@ class TestThreadingAsync(unittest.TestCase):
         async_result.unlink(add_on)
         cv.wait()
         assert async_result.value == b"fred"
-        th.join()
+        th.join()  # type: ignore[unreachable]
 
     def test_linkage_not_ready(self) -> None:
         mock_handler = Mock()
