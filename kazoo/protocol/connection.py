@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from binascii import hexlify
-from contextlib import contextmanager, AbstractContextManager
 import copy
 import logging
 import random
@@ -11,22 +9,25 @@ import select
 import socket
 import ssl
 import time
-from typing import Literal, TypeVar, TYPE_CHECKING, cast, overload
-from collections.abc import Callable
-from collections.abc import Iterator
+from binascii import hexlify
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
+from typing import TYPE_CHECKING, Literal, TypeVar, cast, overload
+
 from typing_extensions import Buffer
 
 from kazoo.exceptions import (
+    EXCEPTIONS,
     AuthFailedError,
     ConnectionDropped,
-    EXCEPTIONS,
-    SessionExpiredError,
-    SessionClosedRequireSaslError,
     NoNodeError,
     SASLException,
+    SessionClosedRequireSaslError,
+    SessionExpiredError,
 )
 from kazoo.loggingsupport import BLATHER
 from kazoo.protocol.serialization import (
+    SASL,
     Auth,
     Close,
     Connect,
@@ -36,16 +37,15 @@ from kazoo.protocol.serialization import (
     Ping,
     PingInstance,
     ReplyHeader,
-    SASL,
     Transaction,
     Watch,
     int_struct,
 )
 from kazoo.protocol.states import (
+    EVENT_TYPE_MAP,
     Callback,
     KeeperState,
     WatchedEvent,
-    EVENT_TYPE_MAP,
 )
 from kazoo.retry import ForceRetryError, KazooRetry, RetryFailedError
 

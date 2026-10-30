@@ -108,7 +108,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "U"]
+select = ["E", "F", "T", "W", "U"]
 ignore = [
     "E203",  # whitespace before ':' (black compatibility)
     "E721",  # do not compare types, use 'isinstance()'
