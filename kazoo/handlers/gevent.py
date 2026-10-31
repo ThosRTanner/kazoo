@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import atexit
-import importlib.util
 import logging
 
 from typing import Any, Callable, Iterable, TYPE_CHECKING, cast
@@ -12,23 +11,19 @@ from typing import Any, Callable, Iterable, TYPE_CHECKING, cast
 from kazoo.handlers.utils import selector_select
 from kazoo.handlers import utils
 
+import gevent
+from gevent import socket
+import gevent.event
+import gevent.queue
+import gevent.thread
+import gevent.selectors
+from gevent.lock import Semaphore, RLock
+
 if TYPE_CHECKING:
     from kazoo.interfaces import FdLike, Lockable, Socket
     from kazoo.protocol.states import Callback
 
-    GEVENT_AVAILABLE: bool = True
     from gevent import Greenlet
-else:
-    GEVENT_AVAILABLE = importlib.util.find_spec("gevent") is not None
-
-if GEVENT_AVAILABLE:
-    import gevent
-    from gevent import socket
-    import gevent.event
-    import gevent.queue
-    import gevent.thread
-    import gevent.selectors
-    from gevent.lock import Semaphore, RLock
 
 log = logging.getLogger(__name__)
 
