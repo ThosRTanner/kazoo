@@ -4,11 +4,12 @@ import importlib.util
 import unittest
 import sys
 
-from typing import Any, Type
+from typing import Type
 import pytest
 
 from kazoo.exceptions import NoNodeError
 from kazoo.handlers.utils import create_tcp_socket
+from kazoo.interfaces import IAsyncResult
 from kazoo.protocol.states import Callback, KazooState, ZnodeStat
 from kazoo.testing import KazooTestCase
 
@@ -27,7 +28,7 @@ else:
 class TestGeventHandler(unittest.TestCase):
     _makeOne = SequentialGeventHandler
 
-    def _getAsync(self) -> Type[AsyncResult[Any]]:
+    def _getAsync(self) -> Type[IAsyncResult]:
         return AsyncResult
 
     def _getEvent(self) -> Type[Event]:
