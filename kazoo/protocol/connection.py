@@ -12,7 +12,7 @@ import time
 from binascii import hexlify
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
-from typing import TYPE_CHECKING, Literal, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast, overload
 
 from typing_extensions import Buffer
 
@@ -52,6 +52,7 @@ from kazoo.retry import ForceRetryError, KazooRetry, RetryFailedError
 if TYPE_CHECKING:
     from kazoo.client import KazooClient, WatchFunc
     from kazoo.interfaces import Socket, Threadlike
+
     PURESASL_AVAILABLE: bool = True
 else:
     PURESASL_AVAILABLE = importlib.util.find_spec("puresasl") is not None
@@ -173,7 +174,7 @@ class ConnectionHandler:
         client: KazooClient,
         retry_sleeper: KazooRetry,
         logger: logging.Logger | None = None,
-        sasl_options: dict[str, str] | None = None,
+        sasl_options: dict[str, Any] | None = None,
     ):
         self.client = client
         self.handler = client.handler
